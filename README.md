@@ -1,0 +1,2 @@
+# Robotics2_JacobianMatrix_Group12_Spherical_2024
+Laboratory 2: Jacobian Matrix
