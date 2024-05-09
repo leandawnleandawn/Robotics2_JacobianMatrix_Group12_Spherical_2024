@@ -126,12 +126,101 @@ class FkinWindow(Window):
         BF = tk.LabelFrame(master=self.windowTitle, font=(5))
         BF.grid(row=1, column=0)
         
-        forward = tk.Button(BF, text = "Foward", command= lambda:[self.fkin, self.jacobian])
+        forward = tk.Button(BF, text = "Foward", command= self.fkin)
         forward.grid(row=0, column=0)
         reset = tk.Button(BF, text = "Reset", command=self.reset)
         reset.grid(row=0, column=1)
         
-        self.robotTB(1,0.5,0.5,0,0,0)        
+        JVV = tk.LabelFrame(master=self.windowTitle, font=(5), text = "Joint Variable Velocities")
+        JVV.grid(row = 0, column = 2)
+        
+        T1_dot= tk.Label(JVV, text = ("Theta_1 = "), font=(10))
+        self.T1_dotdata = tk.Entry(JVV,width=5, font=(10))
+        cms1 = tk.Label(JVV, text = ("cm"), font=(10))
+        
+        T2_dot= tk.Label(JVV, text = ("Theta_1 = "), font=(10))
+        self.T2_dotdata = tk.Entry(JVV,width=5, font=(10))
+        cms2= tk.Label(JVV, text = ("cm"), font=(10))
+        
+        d3_dot= tk.Label(JVV, text = ("Theta_1 = "), font=(10))
+        self.d3_dotdata = tk.Entry(JVV,width=5, font=(10))
+        cms3 = tk.Label(JVV, text = ("cm"), font=(10))
+        
+        EEV = tk.LabelFrame(master=self.windowTitle, font=(5), text = "End Effector Velocities")
+        EEV.grid(row = 1, column = 2)
+        
+        x_dot= tk.Label(EEV, text = ("x_dot= "), font=(10))
+        self.x_dotdata = tk.Entry(EEV,width=5, font=(10))
+        cms4 = tk.Label(EEV, text = ("cm"), font=(10))
+        
+        y_dot= tk.Label(EEV, text = ("y_dot = "), font=(10))
+        self.y_dotdata = tk.Entry(EEV,width=5, font=(10))
+        cms5 = tk.Label(EEV, text = ("cm"), font=(10))
+        
+        z_dot= tk.Label(EEV, text = ("z_dot = "), font=(10))
+        self.z_dotdata = tk.Entry(EEV,width=5, font=(10))
+        cms6 = tk.Label(EEV, text = ("cm"), font=(10))
+        
+        T_x_dot= tk.Label(EEV, text = ("T_x_dot= "), font=(10))
+        self.T_x_dotdata = tk.Entry(EEV,width=5, font=(10))
+        cms7 = tk.Label(EEV, text = ("cm"), font=(10))
+        
+        T_y_dot= tk.Label(EEV, text = ("T_y_dot = "), font=(10))
+        self.T_y_dotdata = tk.Entry(EEV,width=5, font=(10))
+        cms8 = tk.Label(EEV, text = ("cm"), font=(10))
+        
+        T_z_dot= tk.Label(EEV, text = ("T_z_dot = "), font=(10))
+        self.T_z_dotdata = tk.Entry(EEV,width=5, font=(10))
+        cms9 = tk.Label(EEV, text = ("cm"), font=(10))
+        
+        T1_dot.grid(row = 0, column = 0)
+        self.T1_dotdata.grid(row = 0, column = 1)
+        cms1.grid(row=0, column=2)
+        
+        T2_dot.grid(row = 1, column = 0)
+        self.T2_dotdata.grid(row = 1, column = 1)
+        cms2.grid(row=1, column=2)
+        
+        d3_dot.grid(row = 2, column = 0)
+        self.d3_dotdata.grid(row = 2, column = 1)
+        cms3.grid(row=2, column=2)
+        
+        x_dot.grid(row = 0, column = 0)
+        self.x_dotdata.grid(row = 0, column = 1)
+        cms4.grid(row = 0, column = 2)
+        
+        y_dot.grid(row = 1, column = 0)
+        self.y_dotdata.grid(row = 1, column = 1)
+        cms5.grid(row = 1, column = 2)
+        
+        z_dot.grid(row = 2, column = 0)
+        self.z_dotdata.grid(row = 2, column = 1)
+        cms6.grid(row = 2, column = 2)
+        
+        T_x_dot.grid(row = 3, column = 0)
+        self.T_x_dotdata.grid(row = 3, column = 1)
+        cms7.grid(row = 3, column = 2)
+        
+        T_y_dot.grid(row = 4, column = 0)
+        self.T_y_dotdata.grid(row = 4, column = 1)
+        cms8.grid(row = 4, column = 2)
+        
+        T_z_dot.grid(row = 5, column = 0)
+        self.T_z_dotdata.grid(row = 5, column = 1)
+        cms9.grid(row = 5, column = 2)
+        
+        update = tk.Button(master=self.windowTitle, text="Update", command=self.jacobian)
+        update.grid(row = 3, column=2)
+        
+        self.x_dotdata.config(state= tk.DISABLED)
+        self.y_dotdata.config(state= tk.DISABLED)
+        self.z_dotdata.config(state= tk.DISABLED)
+        self.T_x_dotdata.config(state= tk.DISABLED)
+        self.T_y_dotdata.config(state= tk.DISABLED)
+        self.T_z_dotdata.config(state= tk.DISABLED)
+        
+        
+        self.robotTB(1,0.5,0.5,0,0,0)    
           
     def fkin(self):
         self.Xdata.config(state= tk.NORMAL)
@@ -164,11 +253,11 @@ class FkinWindow(Window):
             print(f"HTM # {i+1}")
             print(np.round(j, 2))
         
-        H0_1 = htm[0]
-        H1_2 = htm[1]
-        H0_2 = np.dot(htm[0], htm[1])
-        H2_3 = htm[2]
-        H0_3 = np.dot(np.dot(htm[0], htm[1]), htm[2])
+        self.H0_1 = htm[0]
+        self.H1_2 = htm[1]
+        self.H0_2 = np.dot(htm[0], htm[1])
+        self.H2_3 = htm[2]
+        self.H0_3 = np.dot(np.dot(htm[0], htm[1]), htm[2])
 
         result = np.dot(np.dot(htm[0], htm[1]), htm[2])
         print(np.round(result,2))
@@ -186,13 +275,24 @@ class FkinWindow(Window):
             self.Zdata.config(state= tk.DISABLED)
             self.robotTB(a1, a2, a3, t1, t2, d3)
         
-    def jacobian(self, a1, a2, a3, t1, t2, d3):
+    def jacobian(self):
         
-        self.windowTitle = tk.Toplevel(master = robot)
+        self.x_dotdata.config(state= tk.NORMAL)
+        self.y_dotdata.config(state= tk.NORMAL)
+        self.z_dotdata.config(state= tk.NORMAL)
+        self.T_x_dotdata.config(state= tk.NORMAL)
+        self.T_y_dotdata.config(state= tk.NORMAL)
+        self.T_z_dotdata.config(state= tk.NORMAL)
+        self.x_dotdata.delete(0, 'end')
+        self.y_dotdata.delete(0, 'end')
+        self.z_dotdata.delete(0, 'end')
+        self.T_x_dotdata.delete(0, 'end')
+        self.T_y_dotdata.delete(0, 'end')
+        self.T_z_dotdata.delete(0, 'end')
         
         R0_0 = np.identity(3)
         z0_1 = np.array([[0],[0],[1]])
-        d0_3 = d0_3 = self.H0_3[0:3, 3]
+        d0_3 = self.H0_3[0:3, 3]
         d0_0 = 0
         
         R0_1 = self.H0_1[0:3, 0:3]
@@ -220,8 +320,26 @@ class FkinWindow(Window):
 
         print(J)
         
+        JV_dot = np.array([[float(self.T1_dotdata.get())], [float(self.T2_dotdata.get())], [float(self.d3_dotdata.get())]])
         
+        print(JV_dot)
         
+        EV_dot = np.dot(J, JV_dot)
+        
+        print(EV_dot)
+        
+        self.x_dotdata.insert(tk.END, EV_dot[0, 0])
+        self.y_dotdata.insert(tk.END, EV_dot[1, 0])
+        self.z_dotdata.insert(tk.END, EV_dot[2, 0])
+        self.T_x_dotdata.insert(tk.END, EV_dot[3, 0])
+        self.T_y_dotdata.insert(tk.END, EV_dot[4, 0])
+        self.T_z_dotdata.insert(tk.END, EV_dot[5, 0])
+        self.x_dotdata.config(state= tk.DISABLED)
+        self.y_dotdata.config(state= tk.DISABLED)
+        self.z_dotdata.config(state= tk.DISABLED)
+        self.T_x_dotdata.config(state= tk.DISABLED)
+        self.T_y_dotdata.config(state= tk.DISABLED)
+        self.T_z_dotdata.config(state= tk.DISABLED)
     def dhMatrix(self, theta, alpha, radius, distance):
         return np.matrix([
             [np.cos(theta), -np.sin(theta)*np.cos(alpha), np.sin(theta)*np.sin(alpha), radius*np.cos(theta)],
@@ -296,8 +414,7 @@ class IkinWindow(Window):
         theta2 = np.arctan(s/r) * 180/np.pi
         d3 = (np.sqrt((r**2) + (s**2)) - a2 - a3) * 100
         return theta1, theta2, d3
-
-
+        
 robot = RoboticProgram()
 robot.mainloop()
 
