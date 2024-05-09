@@ -126,12 +126,12 @@ class FkinWindow(Window):
         BF = tk.LabelFrame(master=self.windowTitle, font=(5))
         BF.grid(row=1, column=0)
         
-        forward = tk.Button(BF, text = "Foward", command=self.fkin)
+        forward = tk.Button(BF, text = "Foward", command= lambda:[self.fkin, self.jacobian])
         forward.grid(row=0, column=0)
         reset = tk.Button(BF, text = "Reset", command=self.reset)
         reset.grid(row=0, column=1)
         
-        self.robotTB(1,0.5,0.5,0,0,0)
+        self.robotTB(1,0.5,0.5,0,0,0)        
           
     def fkin(self):
         self.Xdata.config(state= tk.NORMAL)
@@ -163,7 +163,13 @@ class FkinWindow(Window):
         for i,j in htm.items():
             print(f"HTM # {i+1}")
             print(np.round(j, 2))
-            
+        
+        H0_1 = htm[0]
+        H1_2 = htm[1]
+        H0_2 = np.dot(htm[0], htm[1])
+        H2_3 = htm[2]
+        H0_3 = np.dot(np.dot(htm[0], htm[1]), htm[2])
+
         result = np.dot(np.dot(htm[0], htm[1]), htm[2])
         print(np.round(result,2))
         
@@ -172,7 +178,6 @@ class FkinWindow(Window):
             qlim_error = tk.Label(another_pop_up, text = "The Calculated Joint Limits exceeded the Acutal Joint Limits")
             qlim_error.pack()
         else:
-            
             self.Xdata.insert(tk.END, np.round(result[0,3] * 100,2))
             self.Ydata.insert(tk.END, np.round(result[1,3] * 100,2))
             self.Zdata.insert(tk.END, np.round(result[2,3] * 100,2))
@@ -180,6 +185,42 @@ class FkinWindow(Window):
             self.Ydata.config(state= tk.DISABLED)
             self.Zdata.config(state= tk.DISABLED)
             self.robotTB(a1, a2, a3, t1, t2, d3)
+        
+    def jacobian(self, a1, a2, a3, t1, t2, d3):
+        
+        self.windowTitle = tk.Toplevel(master = robot)
+        
+        R0_0 = np.identity(3)
+        z0_1 = np.array([[0],[0],[1]])
+        d0_3 = d0_3 = self.H0_3[0:3, 3]
+        d0_0 = 0
+        
+        R0_1 = self.H0_1[0:3, 0:3]
+        d0_3 = self.H0_3[0:3, 3]
+        d0_1 = self.H0_1[0:3, 3]
+        
+        R0_2 = self.H0_2[0:3, 0:3]
+        z0_0 = np.zeros((3,1))
+        
+        Jv_1 = np.cross(np.dot(R0_0, z0_1), (d0_3-d0_0), axis = 0)
+        Jw_1 = np.dot(R0_0, z0_1)
+
+
+        Jv_2 = np.cross(np.dot(R0_1, z0_1), (d0_3-d0_1), axis = 0)
+        Jw_2 = np.dot(R0_1, z0_1)
+
+        Jv_3 = np.dot(R0_2, z0_1)
+        Jw_3 = z0_0
+
+        Jv = np.concatenate([Jv_1, Jv_2, Jv_3], 1)
+
+        Jw = np.concatenate([Jw_1, Jw_2, Jw_3], 1)
+
+        J = np.concatenate([Jv, Jw], 0)
+
+        print(J)
+        
+        
         
     def dhMatrix(self, theta, alpha, radius, distance):
         return np.matrix([
@@ -257,10 +298,8 @@ class IkinWindow(Window):
         return theta1, theta2, d3
 
 
-class JBinWindow(FkinWindow):
-    def __init__(self):
-        self.windowTitle = tk.Toplevel(master = F)
-        
 robot = RoboticProgram()
 robot.mainloop()
+
+
 
