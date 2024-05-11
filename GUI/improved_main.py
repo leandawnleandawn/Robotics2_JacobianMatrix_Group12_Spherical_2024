@@ -7,9 +7,10 @@ import numpy as np
 from roboticstoolbox import SerialLink, RevoluteDH, PrismaticDH
 import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import sympy as syp
+from sympy.printing import latex
+from io import BytesIO as StringIO
 matplotlib.use('TkAgg')
-
 class RoboticProgram(ttkb.Window):
     
     def __init__(self):
@@ -342,7 +343,28 @@ class FkinWindow(Window):
         Jw = np.concatenate([Jw_1, Jw_2, Jw_3], 1)
 
         J = np.concatenate([Jv, Jw], 0)
-        
+        t = syp.Symbol("t")
+
+        x = syp.Function("x")
+        y=  syp.Function("y")
+        z = syp.Function("z")
+        theta_x = syp.Function("theta_x")
+        theta_y = syp.Function("theta_y")
+        theta_z = syp.Function("theta_z")
+
+        theta_1 = syp.Function("theta_1")
+        theta_2 = syp.Function("theta_2")
+        d_3 = syp.Function("d_3")
+
+
+        joint_variables = syp.Matrix([[syp.diff(theta_1(t))], [syp.diff(theta_2(t))], [syp.diff(d_3(t))]])
+        position_variables = syp.Matrix([[syp.diff(x(t))], [syp.diff(y(t))], [syp.diff(z(t))], [syp.diff(theta_x(t))], [syp.diff(theta_y(t))], [syp.diff(theta_z(t))]])
+        syp.init_printing()
+        print(J)
+        Jacobian_matrix = syp.Eq(position_variables, J*joint_variables)
+
+
+        print(syp.pretty(Jacobian_matrix))
         J_s = np.linalg.det(Jv)
 
         invJv = np.linalg.inv(Jv)
@@ -376,28 +398,24 @@ class FkinWindow(Window):
         singularity_and_jacobian.title("Jacobian Differential Equations and its Jacobian")
         singularity_and_jacobian.geometry("500x500")
         
-        mainframe = tk.Frame(singularity_and_jacobian)
-        mainframe.pack()
+        singulariity_result = f"The Singularity of the Jacobian is {J_s}"
+        singularity = ttkb.Label(singularity_and_jacobian, text= singulariity_result)
+        singularity.pack()
         
-        label = tk.Label(singularity_and_jacobian)
-        label.pack()
-        
-        fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
-        ax = fig.add_subplot(111)
-        
-        
-        canvas = FigureCanvasTkAgg(fig, master=label)
-        canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
-        canvas._tkcanvas.pack(side="top", fill="both", expand=True)
-        
-        tmptext = r"\begin{bmatrix} \dot x\\ \dot y \\ \dot z \\ \omega_x \\ \omega_y \\ omega_z \end{bmatrix}"
-        tmptext = "$" +tmptext+ "$"
-        
-        ax.get_xaxis().set_visible(False)
-        ax.get_yaxis().set_visible(False)
-        ax.clear()
-        ax.text(0.2, 0.6, tmptext, fontsize=50)
-        canvas.draw()
+        def render_latex(formula, fontsize=12, dpi=300, format_='svg'):
+            """Renders LaTeX formula into image.
+            """
+            fig = plt.figure(figsize=(0.01, 0.01))
+            fig.text(0, 0, f'${formula}$', fontsize=fontsize)
+            buffer_ = StringIO()
+            fig.savefig(buffer_, dpi=dpi, transparent=True, format=format_, bbox_inches='tight', pad_inches=0.0)
+            plt.close(fig)
+            return buffer_.getvalue()
+
+        if __name__ == '__main__':
+            image_bytes = render_latex(latex(Jacobian_matrix),fontsize=10, dpi=200, format_='png')
+            with open('jacobian_de.png', 'wb') as image_file:
+                image_file.write(image_bytes)
         
     def dhMatrix(self, theta, alpha, radius, distance):
         return np.matrix([
