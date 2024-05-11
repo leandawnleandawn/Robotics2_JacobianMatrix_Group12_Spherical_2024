@@ -5,13 +5,17 @@ import tkinter as tk
 from PIL import ImageTk, Image
 import numpy as np
 from roboticstoolbox import SerialLink, RevoluteDH, PrismaticDH
+import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+matplotlib.use('TkAgg')
 
 class RoboticProgram(ttkb.Window):
     
     def __init__(self):
         super().__init__()
 
-        self.title("Kinematic Analysis')
+        self.title("Kinematic Analysis")
         self.geometry('1280x720')
         self.resizable(width=False, height=False)
         ML = ttkb.Labelframe(bootstyle='light')
@@ -26,22 +30,20 @@ class RoboticProgram(ttkb.Window):
         img_robot.dontloseit = palletizingRobot
         img_robot.pack(fill="both")
         
-        FKin = ttkb.Button(ML, text = "Forward Kinematics", command = FkinWindow, bootstyle="primary")
+        FKin = ttkb.Button(ML, text = "Forward Kinematics and Jacobian", command = FkinWindow, bootstyle="primary")
         FKin.pack(pady=20, padx = 10)
         
         IKin = ttkb.Button(ML, text = "Inverse Kinematics", command= IkinWindow, bootstyle="primary")
         IKin.pack(pady=20, padx = 10)
         
-        JBin = ttkb.Button(ML, text = "Jacobian Matrix", command= JBinWindow, bootstyle="primary")
-        JBin.pack(pady=20, padx = 10)
         
         
 class Window(RoboticProgram):
     def __init__(self):
         self.windowTitle = ttkb.Toplevel(master = robot)
-        self.windowTitle.geometry("500x500")
+        self.windowTitle.geometry("1000x500")
         LL = ttkb.Labelframe(master=self.windowTitle, text = "Link Length and Joint Variables")
-        LL.place(x=0, y=0, relwidth=0.5, relheight=0.5)
+        LL.place(x=0, y=0, width=200, height=200)
         LL.columnconfigure((0,1,2), weight=1, uniform="a")
         LL.rowconfigure((0,1,2), weight=1, uniform="a")
         a1L = ttkb.Label(LL, text = ("a1 = "))
@@ -69,7 +71,7 @@ class Window(RoboticProgram):
         cm3.grid(row=2,column=2, padx=5, pady=5)
         
         JV= ttkb.Labelframe(master=self.windowTitle, text = "Joint Variables")
-        JV.place(x=250, y=0, relwidth=0.5, relheight=0.5)
+        JV.place(x=300, y=0, width=200, height=200)
         JV.columnconfigure((0,1,2), weight=1, uniform="a")
         JV.rowconfigure((0,1,2), weight=1, uniform="a")
         t1L = ttkb.Label(JV, text = ("T1 = "))
@@ -97,7 +99,7 @@ class Window(RoboticProgram):
         cm4.grid(row=2, column=2, padx=5, pady=5)
         
         PV = ttkb.Labelframe(master=self.windowTitle, text = "Position Vector")
-        PV.place(x=125, y=350, relwidth=0.5, relheight=0.25)
+        PV.place(x=150, y=350, width=200, height=200)
         PV.columnconfigure((0,1,2), weight=1, uniform="a")
         PV.rowconfigure((0,1,2), weight=1, uniform="a")
         XL = ttkb.Label(PV, text = ("X = "))
@@ -139,14 +141,16 @@ class FkinWindow(Window):
     def __init__(self):
         super().__init__()
         
+        self.windowTitle.geometry("750x600")
         self.Xdata.config(state= ttkb.DISABLED)
         self.Ydata.config(state= ttkb.DISABLED)
         self.Zdata.config(state= ttkb.DISABLED)
-        
+
         self.windowTitle.title("Foward Kinematics")
         
+        
         BF = ttkb.Labelframe(master=self.windowTitle)
-        BF.place(x=125, y=250, relwidth=0.5, relheight=0.15)
+        BF.place(x=125, y=250, width=250, height = 75)
         BF.columnconfigure((0,1,2), weight=1, uniform="a")
         BF.rowconfigure((0), weight=1, uniform="a")
         forward = ttkb.Button(BF, text = "Foward", command=self.fkin, bootstyle="primary-outline")
@@ -155,6 +159,91 @@ class FkinWindow(Window):
         reset.grid(row=0, column=1)
         htm = ttkb.Button(BF, text = "Table", command=self.showTable, bootstyle="secondary")
         htm.grid(row=0, column=2)
+                
+        JVV = ttkb.LabelFrame(master=self.windowTitle, text = "Joint Variable Velocities")
+        JVV.place(x=500, y=0, width=250, height=200)
+        JVV.columnconfigure((0,1,2), weight=1, uniform="a")
+        JVV.rowconfigure((0,1,2), weight=1, uniform="a")
+        T1_dot= ttkb.Label(JVV, text = ("Theta_1 = "))
+        self.T1_dotdata = ttkb.Entry(JVV,width=5)
+        cms1 = ttkb.Label(JVV, text = ("cm/s"))
+        
+        T2_dot= ttkb.Label(JVV, text = ("Theta_1 = "))
+        self.T2_dotdata = ttkb.Entry(JVV,width=5)
+        cms2= ttkb.Label(JVV, text = ("cm/s"))
+        
+        d3_dot= ttkb.Label(JVV, text = ("Theta_1 = "))
+        self.d3_dotdata = ttkb.Entry(JVV,width=5)
+        cms3 = ttkb.Label(JVV, text = ("cm/s"))
+        
+        EEV = ttkb.LabelFrame(master=self.windowTitle, text = "End Effector Velocities")
+        EEV.place(x=500, y=225, width=250, height=300)
+        EEV.columnconfigure((0,1,2), weight=1, uniform="a")
+        EEV.rowconfigure((0,1,2), weight=1, uniform="a")
+        
+        x_dot= ttkb.Label(EEV, text = ("x_dot= "))
+        self.x_dotdata = ttkb.Entry(EEV,width=5)
+        cms4 = ttkb.Label(EEV, text = ("cm/s"))
+        
+        y_dot= ttkb.Label(EEV, text = ("y_dot = "))
+        self.y_dotdata = ttkb.Entry(EEV,width=5)
+        cms5 = ttkb.Label(EEV, text = ("cm/s"))
+        
+        z_dot= ttkb.Label(EEV, text = ("z_dot = "))
+        self.z_dotdata = ttkb.Entry(EEV,width=5)
+        cms6 = ttkb.Label(EEV, text = ("cm/s"))
+        
+        T_x_dot= ttkb.Label(EEV, text = ("T_x_dot= "))
+        self.T_x_dotdata = ttkb.Entry(EEV,width=5)
+        cms7 = ttkb.Label(EEV, text = ("cm/s"))
+        
+        T_y_dot= ttkb.Label(EEV, text = ("T_y_dot = "))
+        self.T_y_dotdata = ttkb.Entry(EEV,width=5)
+        cms8 = ttkb.Label(EEV, text = ("cm/s"))
+        
+        T_z_dot= ttkb.Label(EEV, text = ("T_z_dot = "))
+        self.T_z_dotdata = ttkb.Entry(EEV,width=5)
+        cms9 = ttkb.Label(EEV, text = ("cm/s"))
+        
+        T1_dot.grid(row = 0, column = 0, padx=5, pady=5)
+        self.T1_dotdata.grid(row = 0, column = 1, padx=5, pady=5)
+        cms1.grid(row=0, column=2, padx=5, pady=5)
+        
+        T2_dot.grid(row = 1, column = 0, padx=5, pady=5)
+        self.T2_dotdata.grid(row = 1, column = 1, padx=5, pady=5)
+        cms2.grid(row=1, column=2, padx=5, pady=5)
+        
+        d3_dot.grid(row = 2, column = 0, padx=5, pady=5)
+        self.d3_dotdata.grid(row = 2, column = 1, padx=5, pady=5)
+        cms3.grid(row=2, column=2, padx=5, pady=5)
+        
+        x_dot.grid(row = 0, column = 0, padx=5, pady=5)
+        self.x_dotdata.grid(row = 0, column = 1, padx=5, pady=5)
+        cms4.grid(row = 0, column = 2, padx=5, pady=5)
+        
+        y_dot.grid(row = 1, column = 0, padx=5, pady=5)
+        self.y_dotdata.grid(row = 1, column = 1, padx=5, pady=5)
+        cms5.grid(row = 1, column = 2, padx=5, pady=5)
+        
+        z_dot.grid(row = 2, column = 0, padx=5, pady=5)
+        self.z_dotdata.grid(row = 2, column = 1, padx=5, pady=5)
+        cms6.grid(row = 2, column = 2, padx=5, pady=5)
+        
+        T_x_dot.grid(row = 3, column = 0, padx=5, pady=5)
+        self.T_x_dotdata.grid(row = 3, column = 1, padx=5, pady=5)
+        cms7.grid(row = 3, column = 2, padx=5, pady=5)
+        
+        T_y_dot.grid(row = 4, column = 0, padx=5, pady=5)
+        self.T_y_dotdata.grid(row = 4, column = 1, padx=5, pady=5)
+        cms8.grid(row = 4, column = 2, padx=5, pady=5)
+        
+        T_z_dot.grid(row = 5, column = 0, padx=5, pady=5)
+        self.T_z_dotdata.grid(row = 5, column = 1, padx=5, pady=5)
+        cms9.grid(row = 5, column = 2, padx=5, pady=5)
+        
+        update = ttkb.Button(master=self.windowTitle, text="Update", command=self.jacobian)
+        update.place(x=575, y=550)
+        
         self.robotTB(1,0.5,0.5,0,0,0)
           
     def fkin(self):
@@ -187,7 +276,13 @@ class FkinWindow(Window):
         for i,j in htm.items():
             print(f"HTM # {i+1}")
             print(np.round(j, 2))
-            
+        
+        self.H0_1 = htm[0]
+        self.H1_2 = htm[1]
+        self.H0_2 = np.dot(htm[0], htm[1])
+        self.H2_3 = htm[2]
+        self.H0_3 = np.dot(np.dot(htm[0], htm[1]), htm[2])
+        
         result = np.dot(np.dot(htm[0], htm[1]), htm[2])
         print(np.round(result,2))
         
@@ -204,6 +299,105 @@ class FkinWindow(Window):
             self.Ydata.config(state= ttkb.DISABLED)
             self.Zdata.config(state= ttkb.DISABLED)
             self.robotTB(a1, a2, a3, t1, t2, d3)
+
+    def jacobian(self):
+        
+        self.x_dotdata.config(state= ttkb.NORMAL)
+        self.y_dotdata.config(state= ttkb.NORMAL)
+        self.z_dotdata.config(state= ttkb.NORMAL)
+        self.T_x_dotdata.config(state= ttkb.NORMAL)
+        self.T_y_dotdata.config(state= ttkb.NORMAL)
+        self.T_z_dotdata.config(state= ttkb.NORMAL)
+        self.x_dotdata.delete(0, 'end')
+        self.y_dotdata.delete(0, 'end')
+        self.z_dotdata.delete(0, 'end')
+        self.T_x_dotdata.delete(0, 'end')
+        self.T_y_dotdata.delete(0, 'end')
+        self.T_z_dotdata.delete(0, 'end')
+        
+        R0_0 = np.identity(3)
+        z0_1 = np.array([[0],[0],[1]])
+        d0_3 = self.H0_3[0:3, 3]
+        d0_0 = 0
+        
+        R0_1 = self.H0_1[0:3, 0:3]
+        d0_3 = self.H0_3[0:3, 3]
+        d0_1 = self.H0_1[0:3, 3]
+        
+        R0_2 = self.H0_2[0:3, 0:3]
+        z0_0 = np.zeros((3,1))
+        
+        Jv_1 = np.cross(np.dot(R0_0, z0_1), (d0_3-d0_0), axis = 0)
+        Jw_1 = np.dot(R0_0, z0_1)
+
+
+        Jv_2 = np.cross(np.dot(R0_1, z0_1), (d0_3-d0_1), axis = 0)
+        Jw_2 = np.dot(R0_1, z0_1)
+
+        Jv_3 = np.dot(R0_2, z0_1)
+        Jw_3 = z0_0
+
+        Jv = np.concatenate([Jv_1, Jv_2, Jv_3], 1)
+
+        Jw = np.concatenate([Jw_1, Jw_2, Jw_3], 1)
+
+        J = np.concatenate([Jv, Jw], 0)
+        
+        J_s = np.linalg.det(Jv)
+
+        invJv = np.linalg.inv(Jv)
+        
+        print(J)
+        
+        print(J_s)
+        
+        JV_dot = np.array([[float(self.T1_dotdata.get())], [float(self.T2_dotdata.get())], [float(self.d3_dotdata.get())]])
+        
+        print(JV_dot)
+        
+        EV_dot = np.dot(J, JV_dot)
+        
+        print(EV_dot)
+        
+        self.x_dotdata.insert(ttkb.END, EV_dot[0, 0])
+        self.y_dotdata.insert(ttkb.END, EV_dot[1, 0])
+        self.z_dotdata.insert(ttkb.END, EV_dot[2, 0])
+        self.T_x_dotdata.insert(ttkb.END, EV_dot[3, 0])
+        self.T_y_dotdata.insert(ttkb.END, EV_dot[4, 0])
+        self.T_z_dotdata.insert(ttkb.END, EV_dot[5, 0])
+        self.x_dotdata.config(state= ttkb.DISABLED)
+        self.y_dotdata.config(state= ttkb.DISABLED)
+        self.z_dotdata.config(state= ttkb.DISABLED)
+        self.T_x_dotdata.config(state= ttkb.DISABLED)
+        self.T_y_dotdata.config(state= ttkb.DISABLED)
+        self.T_z_dotdata.config(state= ttkb.DISABLED)
+        
+        singularity_and_jacobian = ttkb.Toplevel()
+        singularity_and_jacobian.title("Jacobian Differential Equations and its Jacobian")
+        singularity_and_jacobian.geometry("500x500")
+        
+        mainframe = tk.Frame(singularity_and_jacobian)
+        mainframe.pack()
+        
+        label = tk.Label(singularity_and_jacobian)
+        label.pack()
+        
+        fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
+        ax = fig.add_subplot(111)
+        
+        
+        canvas = FigureCanvasTkAgg(fig, master=label)
+        canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
+        canvas._tkcanvas.pack(side="top", fill="both", expand=True)
+        
+        tmptext = r"\begin{bmatrix} \dot x\\ \dot y \\ \dot z \\ \omega_x \\ \omega_y \\ omega_z \end{bmatrix}"
+        tmptext = "$" +tmptext+ "$"
+        
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+        ax.clear()
+        ax.text(0.2, 0.6, tmptext, fontsize=50)
+        canvas.draw()
         
     def dhMatrix(self, theta, alpha, radius, distance):
         return np.matrix([
@@ -235,7 +429,7 @@ class FkinWindow(Window):
 class IkinWindow(Window):
     def __init__(self):
         super().__init__()
-        
+        self.windowTitle.geometry("500x500")
         self.T1data.config(state= ttkb.DISABLED)
         self.T2data.config(state= ttkb.DISABLED)
         self.d3data.config(state= ttkb.DISABLED)

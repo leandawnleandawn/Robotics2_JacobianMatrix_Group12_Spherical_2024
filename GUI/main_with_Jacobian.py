@@ -136,42 +136,42 @@ class FkinWindow(Window):
         
         T1_dot= tk.Label(JVV, text = ("Theta_1 = "), font=(10))
         self.T1_dotdata = tk.Entry(JVV,width=5, font=(10))
-        cms1 = tk.Label(JVV, text = ("cm"), font=(10))
+        cms1 = tk.Label(JVV, text = ("cm/s"), font=(10))
         
         T2_dot= tk.Label(JVV, text = ("Theta_1 = "), font=(10))
         self.T2_dotdata = tk.Entry(JVV,width=5, font=(10))
-        cms2= tk.Label(JVV, text = ("cm"), font=(10))
+        cms2= tk.Label(JVV, text = ("cm/s"), font=(10))
         
         d3_dot= tk.Label(JVV, text = ("Theta_1 = "), font=(10))
         self.d3_dotdata = tk.Entry(JVV,width=5, font=(10))
-        cms3 = tk.Label(JVV, text = ("cm"), font=(10))
+        cms3 = tk.Label(JVV, text = ("cm/s"), font=(10))
         
         EEV = tk.LabelFrame(master=self.windowTitle, font=(5), text = "End Effector Velocities")
         EEV.grid(row = 1, column = 2)
         
         x_dot= tk.Label(EEV, text = ("x_dot= "), font=(10))
         self.x_dotdata = tk.Entry(EEV,width=5, font=(10))
-        cms4 = tk.Label(EEV, text = ("cm"), font=(10))
+        cms4 = tk.Label(EEV, text = ("cm/s"), font=(10))
         
         y_dot= tk.Label(EEV, text = ("y_dot = "), font=(10))
         self.y_dotdata = tk.Entry(EEV,width=5, font=(10))
-        cms5 = tk.Label(EEV, text = ("cm"), font=(10))
+        cms5 = tk.Label(EEV, text = ("cm/s"), font=(10))
         
         z_dot= tk.Label(EEV, text = ("z_dot = "), font=(10))
         self.z_dotdata = tk.Entry(EEV,width=5, font=(10))
-        cms6 = tk.Label(EEV, text = ("cm"), font=(10))
+        cms6 = tk.Label(EEV, text = ("cm/s"), font=(10))
         
         T_x_dot= tk.Label(EEV, text = ("T_x_dot= "), font=(10))
         self.T_x_dotdata = tk.Entry(EEV,width=5, font=(10))
-        cms7 = tk.Label(EEV, text = ("cm"), font=(10))
+        cms7 = tk.Label(EEV, text = ("cm/s"), font=(10))
         
         T_y_dot= tk.Label(EEV, text = ("T_y_dot = "), font=(10))
         self.T_y_dotdata = tk.Entry(EEV,width=5, font=(10))
-        cms8 = tk.Label(EEV, text = ("cm"), font=(10))
+        cms8 = tk.Label(EEV, text = ("cm/s"), font=(10))
         
         T_z_dot= tk.Label(EEV, text = ("T_z_dot = "), font=(10))
         self.T_z_dotdata = tk.Entry(EEV,width=5, font=(10))
-        cms9 = tk.Label(EEV, text = ("cm"), font=(10))
+        cms9 = tk.Label(EEV, text = ("cm/s"), font=(10))
         
         T1_dot.grid(row = 0, column = 0)
         self.T1_dotdata.grid(row = 0, column = 1)
@@ -317,8 +317,14 @@ class FkinWindow(Window):
         Jw = np.concatenate([Jw_1, Jw_2, Jw_3], 1)
 
         J = np.concatenate([Jv, Jw], 0)
+        
+        J_s = np.linalg.det(Jv)
 
+        invJv = np.linalg.inv(Jv)
+        
         print(J)
+        
+        print(J_s)
         
         JV_dot = np.array([[float(self.T1_dotdata.get())], [float(self.T2_dotdata.get())], [float(self.d3_dotdata.get())]])
         
@@ -340,6 +346,10 @@ class FkinWindow(Window):
         self.T_x_dotdata.config(state= tk.DISABLED)
         self.T_y_dotdata.config(state= tk.DISABLED)
         self.T_z_dotdata.config(state= tk.DISABLED)
+        
+        singularity = tk.Toplevel()
+        
+        
     def dhMatrix(self, theta, alpha, radius, distance):
         return np.matrix([
             [np.cos(theta), -np.sin(theta)*np.cos(alpha), np.sin(theta)*np.sin(alpha), radius*np.cos(theta)],
